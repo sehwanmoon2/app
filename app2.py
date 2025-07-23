@@ -52,7 +52,7 @@ if st.button("Predict Depression"):
         max_tokens=2000,
         temperature=0,
         top_p=1,
-        logprobs=20    # ← 상위 20개 토큰 확률 리턴
+    # ← 상위 20개 토큰 확률 리턴
     )
 
     # --------------------------------------
