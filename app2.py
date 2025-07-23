@@ -46,7 +46,7 @@ if st.button("Predict Depression"):
     )
 
     # Call fine-tuned model directly by its model name
-    response = openai.chat.completions.create(model=FT_MODEL,
+    response = openai.ChatCompletion.create(model=FT_MODEL,
         messages=[
             {"role": "system",  "content": system_msg},
             {"role": "user",    "content": user_msg},
