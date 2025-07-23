@@ -9,6 +9,7 @@ import pandas as pd
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 FT_MODEL = st.secrets["FT_MODEL"]
 
+client = OpenAI( api_key = openai.api_key)
 # ------------------------------------------
 # App Layout
 # ------------------------------------------
