@@ -26,7 +26,7 @@ distress= st.text_area("Experience of Distress:", height=150)
 # ------------------------------------------
 # Prediction Trigger
 # ------------------------------------------
-if st.button("Predict Depression):
+if st.button("Predict Depression"):
     if not happy or not distress:
         st.error("Both transcripts are required to make a prediction.")
         st.stop()
