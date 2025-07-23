@@ -6,10 +6,10 @@ import pandas as pd
 # ------------------------------------------
 # 설정
 # ------------------------------------------
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+API_KEY = st.secrets["OPENAI_API_KEY"]
 FT_MODEL = st.secrets["FT_MODEL"]
 
-
+client = OpenAI(api_key=API_KEY)
 # ------------------------------------------
 # App Layout
 # ------------------------------------------
@@ -45,19 +45,23 @@ if st.button("Predict Depression"):
         "PHQ-9 score:"
     )
     prompt = system_msg + "\n\n" + user_msg
-    # Call fine-tuned model directly by its model name
-    response = openai.Completion.create(
-        model=FT_MODEL,
-        prompt=prompt,
-        max_tokens=2000,
+    ft_model = client.fine_tuning.jobs.retrieve(ft_model).fine_tuned_model
+    response = client.chat.completions.create(
+        model=ft_model,
+        messages=[
+            {"role": "system", "content": system_msg},
+            {"role": "user",   "content": user_prompt}
+        ],
         temperature=0,
-
+        top_p=1,
+        logprobs=True,top_logprobs=20,
+        max_tokens=2000,
     )
 
     # --------------------------------------
     # Parse Model Output
     # --------------------------------------
-    content = response.choices[0].text
+    content = response.choices[0].message.content
     lines   = content.splitlines()
     try:
         score = int(lines[0].strip())
@@ -75,14 +79,9 @@ if st.button("Predict Depression"):
     # --------------------------------------
     # Token-level probabilities
     # --------------------------------------
-    lp = response.choices[0].logprobs
-    tokens       = lp.tokens
-    token_logps  = lp.token_logprobs
-    token_probs  = [
-        [tok, float(np.exp(logp) * 100)] 
-        for tok, logp in zip(tokens, token_logps)
-    ]
-    df_probs = pd.DataFrame(token_probs, columns=["Token", "Prob (%)"])
+    top_logprobs = response.choices[0].logprobs.content[0].top_logprobs
+    token_probs  = [[entry.token, float(np.exp(entry.logprob)*100)] for entry in top_logprobs]
+    df_probs     = pd.DataFrame(token_probs, columns=["Token","Prob (%)"])
 
     # --------------------------------------
     # Grouped probability & confidence
@@ -91,12 +90,12 @@ if st.button("Predict Depression"):
         try: return int(x)
         except: return None
 
-    grp0_4  = sum(p for t,p in token_probs if isinstance(safe_int(t), int) and 0 <= safe_int(t) <= 4)
-    grp5_27 = sum(p for t,p in token_probs if isinstance(safe_int(t), int) and 5 <= safe_int(t) <= 27)
-    tot     = grp0_4 + grp5_27
-    pct0_4  = grp0_4/tot*100 if tot else 0
-    pct5_27 = grp5_27/tot*100 if tot else 0
-    confidence = abs(pct5_27 - 50)/50 if tot else 0
+    grp0_4 = sum(p for t,p in token_probs if isinstance(safe_int(t),int) and 0 <= safe_int(t) <= 4)
+    grp5_27= sum(p for t,p in token_probs if isinstance(safe_int(t),int) and 5 <= safe_int(t) <= 27)
+    tot    = grp0_4 + grp5_27
+    pct0_4 = (grp0_4/tot*100) if tot else 0
+    pct5_27= (grp5_27/tot*100) if tot else 0
+    confidence = abs(pct5_27-50)/50 if tot else 0
     depression = pct5_27 >= 50
 
     # --------------------------------------
@@ -110,4 +109,4 @@ if st.button("Predict Depression"):
     st.dataframe(df_probs)
     st.write(f"**Grouped probability** (0–4 vs 5–27): {pct0_4:.2f}% vs {pct5_27:.2f}%")
     st.write(f"**Confidence:** {confidence:.2f}")
-    st.write(f"**Depression predicted?** {'Yes' if depression else 'No'}")
+    st.write(f"**Depression predicted?** {'Yes' if depression else 'No'}") 
