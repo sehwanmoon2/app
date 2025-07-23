@@ -46,7 +46,7 @@ if st.button("Predict Depression"):
         "PHQ-9 score:"
     )
     prompt = system_msg + "\n\n" + user_msg
-    ft_model = client.fine_tuning.jobs.retrieve(ft_model).fine_tuned_model
+    ft_model = client.fine_tuning.jobs.retrieve(FT_MODEL).fine_tuned_model
     response = client.chat.completions.create(
         model=ft_model,
         messages=[
