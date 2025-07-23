@@ -46,8 +46,13 @@ if st.button("Predict Depression"):
     )
     prompt = system_msg + "\n\n" + user_msg
     # Call fine-tuned model directly by its model name
-    response = openai.Completion.create(model=FT_MODEL,prompt=prompt,
-        max_tokens=2000,temperature=0,top_p=1,seed=1, logprobs=True,top_logprobs=20,
+    response = openai.Completion.create(
+        model=FT_MODEL,
+        prompt=prompt,
+        max_tokens=2000,
+        temperature=0,
+        top_p=1,
+        logprobs=20    # ← 상위 20개 토큰 확률 리턴
     )
 
     # --------------------------------------
