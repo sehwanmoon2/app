@@ -1,5 +1,5 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 import numpy as np
 import pandas as pd
 
@@ -8,8 +8,7 @@ openai_api_key = st.secrets["general"]["sk-proj-DmC7cZoXFfYxFKSKazmRwQMq7avmf0A1
 ft_model        = st.secrets["app"]['ftjob-tBc4FWu6jajQpvWzGuaGGNp5']
 
 # Initialize OpenAI client
-openai.api_key = openai_api_key
-
+client = OpenAI(api_key=openai_api_key)
 
 # ------------------------------------------
 # App Layout
@@ -47,7 +46,7 @@ if st.button("Predict Depression"):
     )
 
     # Call fine-tuned model
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model=ft_model,
         messages=[
             {"role": "system", "content": system_msg},
