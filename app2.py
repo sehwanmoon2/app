@@ -44,20 +44,16 @@ if st.button("Predict Depression"):
         f"Experience of Distress: {distress}\n\n"
         "PHQ-9 score:"
     )
-
+    prompt = system_msg + "\n\n" + user_msg
     # Call fine-tuned model directly by its model name
-    response = openai.ChatCompletion.create(model=FT_MODEL,
-        messages=[
-            {"role": "system",  "content": system_msg},
-            {"role": "user",    "content": user_msg},
-        ],
+    response = openai.Completion.create(model=FT_MODEL,prompt=prompt,
         max_tokens=2000,temperature=0,top_p=1,seed=1, logprobs=True,top_logprobs=20,
     )
 
     # --------------------------------------
     # Parse Model Output
     # --------------------------------------
-    content = response.choices[0].message.content
+    content = response.choices[0].text
     lines   = content.splitlines()
     try:
         score = int(lines[0].strip())
