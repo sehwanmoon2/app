@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 
 
-openai_api_key = st.secrets["general"]["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"]
-ft_model        = st.secrets["app"]['ftjob-tBc4FWu6jajQpvWzGuaGGNp5']
+openai_api_key = st.secrets["general"]["OPENAI_API_KEY"]
+ft_model        = st.secrets["app"]["FT_MODEL"]
 
 # Initialize OpenAI client
 client = OpenAI(api_key=openai_api_key)
