@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 
 
-openai_api_key = st.secrets["general"]["OPENAI_API_KEY"]
-ft_model        = st.secrets["app"]["FT_MODEL"]
+openai_api_key = st.secrets["OPENAI_API_KEY"]
+ft_model        = st.secrets["FT_MODEL"]
 
 # Initialize OpenAI client
 client = OpenAI(api_key=openai_api_key)
