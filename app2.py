@@ -2,14 +2,14 @@ import streamlit as st
 import openai
 import numpy as np
 import pandas as pd
-from openai import OpenAI 
+
 # ------------------------------------------
 # 설정
 # ------------------------------------------
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 FT_MODEL = st.secrets["FT_MODEL"]
 
-client = OpenAI( api_key = openai.api_key)
+
 # ------------------------------------------
 # App Layout
 # ------------------------------------------
@@ -44,9 +44,9 @@ if st.button("Predict Depression"):
         f"Experience of Distress: {distress}\n\n"
         "PHQ-9 score:"
     )
-    ft_model = client.fine_tuning.jobs.retrieve(FT_MODEL).fine_tuned_model
+    ft_model = openai.fine_tuning.jobs.retrieve(FT_MODEL).fine_tuned_model
     # Call fine-tuned model directly by its model name
-    response = client.chat.completions.create(model=ft_model,
+    response = openai.chat.completions.create(model=ft_model,
         messages=[
             {"role": "system",  "content": system_msg},
             {"role": "user",    "content": user_msg},
