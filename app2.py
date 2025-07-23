@@ -44,9 +44,9 @@ if st.button("Predict Depression"):
         f"Experience of Distress: {distress}\n\n"
         "PHQ-9 score:"
     )
-    ft_model = openai.fine_tuning.jobs.retrieve(FT_MODEL).fine_tuned_model
+
     # Call fine-tuned model directly by its model name
-    response = openai.chat.completions.create(model=ft_model,
+    response = openai.chat.completions.create(model=FT_MODEL,
         messages=[
             {"role": "system",  "content": system_msg},
             {"role": "user",    "content": user_msg},
