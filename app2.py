@@ -1,14 +1,13 @@
 import streamlit as st
-from openai import OpenAI
+import openai
 import numpy as np
 import pandas as pd
 
-
-openai_api_key = st.secrets["OPENAI_API_KEY"]
-ft_model        = st.secrets["FT_MODEL"]
-
-# Initialize OpenAI client
-client = OpenAI(api_key=openai_api_key)
+# ------------------------------------------
+# 설정
+# ------------------------------------------
+openai.api_key = st.secrets["OPENAI_API_KEY"]
+FT_MODEL = st.secrets["FT_MODEL"]
 
 # ------------------------------------------
 # App Layout
@@ -20,8 +19,8 @@ st.title("🧠 Depression Prediction with Explanation & Confidence")
 # User Inputs
 # ------------------------------------------
 st.header("Enter Participant Transcripts")
-happy   = st.text_area("Experience of Happiness:", height=150)
-distress= st.text_area("Experience of Distress:", height=150)
+happy    = st.text_area("Experience of Happiness:", height=150)
+distress = st.text_area("Experience of Distress:", height=150)
 
 # ------------------------------------------
 # Prediction Trigger
@@ -31,7 +30,7 @@ if st.button("Predict Depression"):
         st.error("Both transcripts are required to make a prediction.")
         st.stop()
 
-    # Build system and user messages
+    # Build messages for ChatCompletion
     system_msg = (
         "You will be given a transcript of a participant talking about "
         "the topics of happiness and distress.\n"
@@ -39,24 +38,23 @@ if st.button("Predict Depression"):
         "2. Write a brief explanation for your prediction by referring to evidence from the transcript.\n"
         "3. Highlight all significant words or phrases that influenced your decision, separated by commas."
     )
-    user_prompt = (
-        f"The following transcript describes an experience of happiness: {happy} "
-        f"The following transcript describes an experience of distress: {distress} "
+    user_msg = (
+        f"Experience of Happiness: {happy}\n\n"
+        f"Experience of Distress: {distress}\n\n"
         "PHQ-9 score:"
     )
 
-    # Call fine-tuned model
-    ft_model = client.fine_tuning.jobs.retrieve(ft_model).fine_tuned_model
-    response = client.chat.completions.create(
-        model=ft_model,
+    # Call fine-tuned model directly by its model name
+    response = openai.ChatCompletion.create(
+        model=FT_MODEL,
         messages=[
-            {"role": "system", "content": system_msg},
-            {"role": "user",   "content": user_prompt}
+            {"role": "system",  "content": system_msg},
+            {"role": "user",    "content": user_msg},
         ],
         temperature=0,
         top_p=1,
-        logprobs=True,top_logprobs=20,
         max_tokens=2000,
+        logprobs=20  # 토큰별 확률을 보려면 지원되는 모델이어야 합니다.
     )
 
     # --------------------------------------
@@ -80,9 +78,14 @@ if st.button("Predict Depression"):
     # --------------------------------------
     # Token-level probabilities
     # --------------------------------------
-    top_logprobs = response.choices[0].logprobs.content[0].top_logprobs
-    token_probs  = [[entry.token, float(np.exp(entry.logprob)*100)] for entry in top_logprobs]
-    df_probs     = pd.DataFrame(token_probs, columns=["Token","Prob (%)"])
+    lp = response.choices[0].logprobs
+    tokens       = lp.tokens
+    token_logps  = lp.token_logprobs
+    token_probs  = [
+        [tok, float(np.exp(logp) * 100)] 
+        for tok, logp in zip(tokens, token_logps)
+    ]
+    df_probs = pd.DataFrame(token_probs, columns=["Token", "Prob (%)"])
 
     # --------------------------------------
     # Grouped probability & confidence
@@ -91,12 +94,12 @@ if st.button("Predict Depression"):
         try: return int(x)
         except: return None
 
-    grp0_4 = sum(p for t,p in token_probs if isinstance(safe_int(t),int) and 0 <= safe_int(t) <= 4)
-    grp5_27= sum(p for t,p in token_probs if isinstance(safe_int(t),int) and 5 <= safe_int(t) <= 27)
-    tot    = grp0_4 + grp5_27
-    pct0_4 = (grp0_4/tot*100) if tot else 0
-    pct5_27= (grp5_27/tot*100) if tot else 0
-    confidence = abs(pct5_27-50)/50 if tot else 0
+    grp0_4  = sum(p for t,p in token_probs if isinstance(safe_int(t), int) and 0 <= safe_int(t) <= 4)
+    grp5_27 = sum(p for t,p in token_probs if isinstance(safe_int(t), int) and 5 <= safe_int(t) <= 27)
+    tot     = grp0_4 + grp5_27
+    pct0_4  = grp0_4/tot*100 if tot else 0
+    pct5_27 = grp5_27/tot*100 if tot else 0
+    confidence = abs(pct5_27 - 50)/50 if tot else 0
     depression = pct5_27 >= 50
 
     # --------------------------------------
