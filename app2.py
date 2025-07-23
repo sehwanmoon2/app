@@ -43,18 +43,14 @@ if st.button("Predict Depression"):
         f"Experience of Distress: {distress}\n\n"
         "PHQ-9 score:"
     )
-
+    ft_model = client.fine_tuning.jobs.retrieve(FT_MODEL).fine_tuned_model
     # Call fine-tuned model directly by its model name
-    response = openai.ChatCompletion.create(
-        model=FT_MODEL,
+    response = client.chat.completions.create(model=ft_model,
         messages=[
             {"role": "system",  "content": system_msg},
             {"role": "user",    "content": user_msg},
         ],
-        temperature=0,
-        top_p=1,
-        max_tokens=2000,
-        logprobs=20  # 토큰별 확률을 보려면 지원되는 모델이어야 합니다.
+        max_tokens=2000,temperature=0,top_p=1,seed=1, logprobs=True,top_logprobs=20,
     )
 
     # --------------------------------------
