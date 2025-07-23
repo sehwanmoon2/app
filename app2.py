@@ -13,8 +13,8 @@ client = OpenAI(api_key=openai_api_key)
 # ------------------------------------------
 # App Layout
 # ------------------------------------------
-st.set_page_config(page_title="PHQ-9 Prediction App", layout="centered")
-st.title("🧠 PHQ-9 Prediction with Explanation & Confidence")
+st.set_page_config(page_title="Depression Prediction App", layout="centered")
+st.title("🧠 Depression Prediction with Explanation & Confidence")
 
 # ------------------------------------------
 # User Inputs
@@ -46,6 +46,7 @@ if st.button("Predict Depression"):
     )
 
     # Call fine-tuned model
+    ft_model = client.fine_tuning.jobs.retrieve(ft_model).fine_tuned_model
     response = client.chat.completions.create(
         model=ft_model,
         messages=[
