@@ -45,13 +45,13 @@ if st.button("Predict Depression"):
         f"Experience of Distress: {distress}\n\n"
         "PHQ-9 score:"
     )
-    prompt = system_msg + "\n\n" + user_msg
+
     ft_model = client.fine_tuning.jobs.retrieve(FT_MODEL).fine_tuned_model
     response = client.chat.completions.create(
         model=ft_model,
         messages=[
             {"role": "system", "content": system_msg},
-            {"role": "user",   "content": user_prompt}
+            {"role": "user",   "content": user_msg}
         ],
         temperature=0,
         top_p=1,
